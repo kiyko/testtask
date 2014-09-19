@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Prints the CREATE TABLE and initial-data SQL statements
+# for the given app name
+if (($# > 0)); then
+  python3 manage.py sqlall $1
+else
+  echo "Please enter a valid application name"
+fi

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Creates a Django application
+if (($# > 0)); then
+  python3 manage.py startapp $1
+else
+  echo "Please enter a valid application name"
+fi

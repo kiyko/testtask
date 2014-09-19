@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Synchronizes the database state with the current set of models and migration
+python3 manage.py migrate

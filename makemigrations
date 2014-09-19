@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Creates new migrations based on the changes detected to model(s)
+if (($# > 0)); then
+  python3 manage.py makemigrations $1
+else
+  python3 manage.py makemigrations
+fi
