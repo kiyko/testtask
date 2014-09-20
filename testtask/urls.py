@@ -1,7 +1,7 @@
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from probe import views
+from main import views
 
 
 urlpatterns = [
@@ -11,6 +11,6 @@ urlpatterns = [
 
     url(r'^data/(?P<mdl>[\w-]+)/', views.Data.as_view(), name='data'),
     url(r'^create/(?P<mdl>[\w-]+)/', views.Create.as_view(), name='create'),
-    url(r'^update/(?P<mdl>[\w-]+)/(?P<pk>[\w-]+)/', views.Update.as_view(),
-        name='update'),
+    url(r'^update/(?P<mdl>[\w-]+)/(?P<pk>[\w-]+)/',
+        views.Update.as_view(), name='update'),
 ]

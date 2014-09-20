@@ -7,7 +7,7 @@ from os import path
 BASE_DIR = path.dirname(path.dirname(__file__))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '@-k#9@id@j8y7=_68q+^wppxxew2t5pr7z1n8s+uz7%21wa-%b'
+SECRET_KEY = 'tydhn1gpx2k42n46e$#!+fa(let@1c&g14jv0zxr++@84qo&7p'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -25,7 +25,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'probe',
+    'main',
 )
 
 MIDDLEWARE_CLASSES = (

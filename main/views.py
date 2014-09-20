@@ -7,14 +7,14 @@ from django.http import Http404, HttpResponse
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 
-from probe import models
+from main import models
 
 
 class Index(TemplateView):
     '''
     Home page
     '''
-    template_name = 'probe/index.html'
+    template_name = 'main/index.html'
 
     def get_context_data(self, **kwargs):
         # Context

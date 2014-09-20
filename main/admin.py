@@ -2,7 +2,7 @@ import sys
 
 from django.contrib import admin
 
-from probe import models
+from main import models
 
 
 def setup_admin():
