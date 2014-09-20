@@ -1,4 +1,5 @@
-*.py[co]
+*.py[cod]
 *~
+*.log
 *.sqlite3
 migrations/
