@@ -25,7 +25,7 @@ def setup_models(field_types):
 
     mod = sys.modules[__name__]  # current module
     #
-    with open('models.yaml', mode='r', encoding='utf-8') as schema_file:
+    with open('main/models.yaml', mode='r', encoding='utf-8') as schema_file:
         # Loads data schema
         schema = yaml.load(schema_file)
     # Creates models from data schema
