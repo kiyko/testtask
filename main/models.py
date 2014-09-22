@@ -76,12 +76,3 @@ def _char_field(**kwargs):
 setup_models(field_types={'char': _char_field,
                           'int': models.IntegerField,
                           'date': models.DateField})
-
-'''
-import inspect
-
-print('-- models --')
-cls_list = inspect.getmembers(sys.modules[__name__], inspect.isclass)
-cls = dict(cls_list)['Probe']
-print(cls.__dict__)
-'''

@@ -1,6 +1,7 @@
 $(document).ready(function () {
   $('#models').on('click', 'a', on_load);
-  $('#values').on('click focus', 'td:not(.edt)', on_edit);
+  //
+  $('#values').on('click', 'td:not(.edt,.pk)', on_edit);
   $('#values').on('focusout', 'td.edt input:not(.date)', on_edited);
 });
 
@@ -10,16 +11,28 @@ function on_load() {
   $('#models li.active').removeClass('active');
   li.addClass('active');
   // Loads data from the model
-  load_data(li.attr('id'));
+  load_data(li.attr('id'), function on_loaded(data) {
+    if ('fields' in data) {
+      // Adds table head
+      add_fields(data.fields);
+      // Adds table rows
+      if ('values' in data) {
+        add_values(data.values);
+      }
+      // Adds inputs for new data
+      add_blanks(data.fields);
+    }
+  });
 }
 
 function on_edit() {
   var td = $(this);
-  var fld = get_field(td);
+  var val = td.html();
+  //
+  var fld = field_by_cell(td);
   var id = fld.data('id');
   var tp = fld.data('type');
   //
-  var val = td.html();
   td.html('<input id="' + id + '" class="' + tp + '" type="text" name="' + id +
           '" value="' + val + '" size="10" data-orig="' + val + '" />');
   //
@@ -32,24 +45,26 @@ function on_edit() {
 }
 
 function on_edited() {
-  var val = $(this).val();
-  var org = $(this).data('orig'); // original value
   var td = $(this).parent();
+  var val = $(this).val();
   // Completes editing
   td.html(val);
   td.toggleClass('edt');
   // Updating data
+  var org = $(this).data('orig'); // original value
   if (val != org) { // => value changed
-    var fld = get_field(td);
+    var fld = field_by_cell(td);
     var type = fld.data('type');
-    var mdl_id = $('#models li.active').attr('id');
     //
     if (is_valid(type, val)) {
       var vals = {};
       vals[fld.data('id')] = val;
-      update_data(mdl_id, vals);
       //
-      $(this).attr('data-orig', val);
+      var mdl_id = $('#models li.active').attr('id');
+      var pk = td.parent('tr').data('pk');
+      send_data('update', mdl_id + '/' + pk, vals, function on_sent(data) {
+        //console.log(data);
+      });
     }
     else {
       alert('Value "' + val + '" must be of type ' + type);
@@ -59,37 +74,22 @@ function on_edited() {
   // Otherwise => no change, do nothing
 }
 
-function load_data(mdl_id) {
+function load_data(prms, on_loaded) {
   $.ajax({
-    url: '/data/' + mdl_id,
+    url: '/data/' + prms + '/',
     type: 'GET',
     dataType: 'json',
     cache: false,
-    success: _on_success,
-    failure: _on_failure
+    success: on_loaded,
+    failure: _on_fail
   });
 
-  function _on_success(data) {
-    if ('fields' in data) {
-      // Adds table head
-      add_fields(data.fields);
-      //
-      if ('values' in data) {
-        // Adds table rows
-        add_values(data.values);
-      }
-      //
-      add_blank(data.fields);
-    }
-  }
-
-  function _on_failure(data) { 
+  function _on_fail(data) { 
     alert('Data loading failed');
   }
 }
 
 function is_valid(type, val) {
-  console.log(val + ': ' + type);
   if (type === 'int') {
     return !isNaN(Number(val));
   }
@@ -100,73 +100,121 @@ function is_valid(type, val) {
   return true;
 }
 
-function update_data(mdl_id, vals) {
+function send_data(act, prms, data, on_sent) {
   $.ajax({
-    url: '/update/' + mdl_id + '/1/',
+    url: '/' + act + '/' + prms + '/',
     type: 'POST',
-    data: vals,
+    data: data,
     dataType: 'json',
     cache: false,
-    success: _on_success,
-    failure: _on_failure
+    success: on_sent,
+    failure: _on_fail
   });
 
-  function _on_success(data) {
-    console.log(data);
-  }
-
-  function _on_failure(data) { 
+  function _on_fail(data) { 
     alert('Data updating failed');
   }
 }
 
-function get_field(td) {
-  return $($('#fields').find('th').get(td.index()));
+function field_by_index(i) {
+  return $($('#fields').find('th').get(i));
+}
+
+function field_by_cell(td) {
+  return field_by_index(td.index());
 }
 
 function add_fields(flds) {
   var tr = $('#fields');
-  var i, fld;
   // Removes all header items
   tr.empty();
-  // Adds new header items
-  for (i in flds) {
+  // Adds the header
+  tr.append('<th class="pk">#</th>');
+  var fld;
+  var n = flds.length;
+  for (var i = 0; i < n; i++) {
     fld = flds[i];
     tr.append('<th data-id="' + fld.id + '" data-type="' + fld.type + '">' +
               (('title' in fld) ? fld.title : fld.id) + '</th>');
   }
+  tr.append('<th class="ctrl"></th>');
 }
 
 function add_values(vals) {
-  var tr, tbody = $('#values');
-  var i, row;
-  // Removes all data items
-  tbody.empty();
-  // Adds new data items
-  for (i in vals) {
-    tr = $('<tr></tr>');
-    tbody.append(tr);
-    //
-    row = vals[i];
-    for (j in row) {
-      tr.append('<td>' + row[j] + '</td>');
-    }
+  // Removes all data cells
+  $('#values').empty();
+  // Adds rows of data
+  var n = vals.length;
+  for (var i = 0; i < n; i++) {
+    add_values_row(vals[i]);
   }
 }
 
-function add_blank(flds) {
-  var tbody = $('#blank');
-  // Removes all data items
+function add_values_row(vals) {
+  var n = vals.length;
+  if (n > 0) {
+    var pk = vals[0];
+    var tr = $('<tr data-pk="' + pk + '"></tr>');
+    $('#values').append(tr);
+    // Adds one row of data
+    tr.append('<td class="pk">' + pk + '</td>');
+    for (var i = 1; i < n; i++) {
+      tr.append('<td>' + vals[i] + '</td>');
+    }
+    tr.append('<td></td>');
+  }
+}
+
+function add_blanks(flds) {
+  var tbody = $('#blanks');
+  // Removes all elements
   tbody.empty();
-  // Adds a blank row for new data
-  var tr = $('<tr></tr>');
+  // Adds a row for new data
+  var tr = $('<tr><td></td></tr>');
   tbody.append(tr);
+  // Adds inputs for new data
+  var fld;
+  var n = flds.length;
+  if (n > 0) {
+    for (var i = 0; i < n; i++) {
+      fld = flds[i];
+      tr.append('<td><input class="' + fld.type + '" type="text" name="' +
+                fld.id + '" size="10" /></td>');
+    }
+    //
+    $('#blanks input.date').datepicker({dateFormat: 'yy-mm-dd'});
+    //
+    tr.append('<td><input type="button" id="create" value="Добавить" /></td>');
+    $('#create').on('click', on_create);
+  }
+}
+
+function on_create() {
+  var fld, type, val, vals = {};
   //
-  var i, fld;
-  for (i in flds) {
-    fld = flds[i];
-    tr.append('<td data-id="' + fld.id + '" data-type="' + fld.type +
-              '"><input id="' + fld.id + '" class="' + fld.type +
-              ' blk" type="text" name="' + fld.id + '" size="10" /></td>');
+  var ctrls = $('#blanks input[type=text]');
+  ctrls.each(function (i) {
+    fld = field_by_index(i + 1);
+    type = fld.data('type');
+    val = $(this).val();
+    //
+    if (!is_valid(fld.data('type'), val)) {
+      alert('Value "' + val + '" must be of type ' + type);
+      $(this).select();
+      vals = {};
+      return false; // break each
+    }
+    //
+    vals[fld.data('id')] = val;
+  });
+  //
+  if (!$.isEmptyObject(vals)) {
+    var mdl_id = $('#models li.active').attr('id');
+    send_data('create', mdl_id, vals, function on_sent(data) {
+      ctrls.val(''); // clear inputs
+      if ('values' in data) {
+        add_values_row(data.values);
+      }
+    });
   }
 }

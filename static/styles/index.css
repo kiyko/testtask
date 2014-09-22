@@ -38,8 +38,17 @@ section table thead tr th {
   padding: 5px;
   min-width: 100px;
 }
+section table thead tr th.pk {
+  min-width: 10px;
+}
+section table thead tr th.ctrl {
+  border-bottom: 0;
+}
 section table tbody tr td {
   padding: 5px;
+}
+section table tbody tr td.pk {
+  text-align: center;
 }
 section table tbody tr td.edt {
   padding: 3px;

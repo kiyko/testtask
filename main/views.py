@@ -2,7 +2,6 @@ import json
 from collections import OrderedDict
 
 from django.views.generic import TemplateView, View
-from django.views.generic.detail import SingleObjectMixin
 from django.http import Http404, HttpResponse
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
@@ -31,7 +30,7 @@ class Data(View):
     def get(self, request, *args, **kwargs):
         if 'mdl' not in self.kwargs:
             raise Http404()
-        #
+        # Responds to the GET request
         return HttpResponse(self.get_data(mdl_id=self.kwargs['mdl']),
                             content_type='application/json; charset=utf-8')
 
@@ -46,15 +45,12 @@ class Data(View):
         data = serializers.serialize('python', mdl.objects.all())
         #
         order = OrderedDict((fld, '') for fld in content['order'])
-        content.update({'values': [self._ord(order, datum['fields'])
-                                   for datum in data]})
+        content.update({
+            'values': [_ord_data(datum['pk'], datum['fields'], order)
+                       for datum in data]
+        })
         #
         return json.dumps(content, cls=DjangoJSONEncoder)
-
-    def _ord(self, order, vals):
-        for (fld, val) in vals.items():
-            order[fld] = val
-        return tuple(order.values())
 
 
 class Create(View):
@@ -66,15 +62,25 @@ class Create(View):
 
     def post(self, request, *args, **kwargs):
         if 'mdl' in self.kwargs:
-            mdl = models.get_model(self.kwargs['mdl'])  # class of the model
+            mdl_id = self.kwargs['mdl']
+            mdl = models.get_model(mdl_id)  # class of the model
             # Adds record
-            obj = mdl(**self.request.POST.dict())
-            #
-            content = {'msg': 'Model updated', 'pk': obj.pk}
+            vals = self.request.POST.dict()
+            obj = mdl(**vals)
+            obj.save()
+            # Creates content
+            content = {'msg': 'Model created'}
+            datum = serializers.serialize('python',
+                                          [mdl.objects.get(pk=obj.pk)])[0]
+            order = OrderedDict((fld, '')
+                                for fld in models.schema[mdl_id]['order'])
+            content.update({
+                'values': _ord_data(datum['pk'], datum['fields'], order)
+            })
         else:
             content = {'msg': 'Missing some parameters'}
-        #
-        return HttpResponse(json.dumps(content),
+        # Responds to the POST request
+        return HttpResponse(json.dumps(content, cls=DjangoJSONEncoder),
                             content_type='application/json; charset=utf-8')
 
 
@@ -88,17 +94,22 @@ class Update(View):
     def post(self, request, *args, **kwargs):
         if ('mdl' in self.kwargs) and ('pk' in self.kwargs):
             mdl = models.get_model(self.kwargs['mdl'])  # class of the model
-            pk = self.kwargs['pk']
             # Updates fields
-            obj = mdl.objects.get(pk=pk)
+            obj = mdl.objects.get(pk=self.kwargs['pk'])
             for (fld, val) in self.request.POST.items():
                 if hasattr(obj, fld):
                     setattr(obj, fld, val)
             obj.save()
             #
-            content = {'msg': 'Model updated', 'pk': pk}
+            content = {'msg': 'Model updated', 'pk': obj.pk}
         else:
             content = {'msg': 'Missing some parameters'}
-        #
+        # Responds to the POST request
         return HttpResponse(json.dumps(content),
                             content_type='application/json; charset=utf-8')
+
+
+def _ord_data(pk, vals, order):
+    for (fld, val) in vals.items():
+        order[fld] = val
+    return [pk] + list(order.values())
