@@ -25,6 +25,12 @@ cmd/migrate
 cmd/runserver
 ```
 
+## Running tests
+
+```sh
+cmd/test
+```
+
 ## Demo
 
 [testtask-testtask.rhcloud.com](http://testtask-testtask.rhcloud.com/)
