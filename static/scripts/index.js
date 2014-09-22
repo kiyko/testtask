@@ -5,6 +5,15 @@ $(document).ready(function () {
   $('#values').on('focusout', 'td.edt input:not(.date)', on_edited);
 });
 
+$(document).on('keypress', 'form', function (ev) {
+  var code = (ev.keyCode || ev.which);
+  if (code == 13) { // => Enter pressed
+    // Prevents the form submit
+    ev.preventDefault();
+    return false;
+  }
+});
+
 function on_load() {
   var li = $(this).parent();
   // Makes the model active
