@@ -1,7 +1,42 @@
+import os
+import yaml
 import json
 
 from unittest import TestCase
 from django.test import Client
+
+from main import models
+
+
+class ModelTest(TestCase):
+    def setUp(self):
+        self.schema = {}
+        with open(os.path.join(os.path.dirname(__file__), 'models.yaml'),
+                  mode='r', encoding='utf-8') as schema_file:
+            # Loads data schema
+            self.schema = yaml.load(schema_file)
+
+    def test_ids(self):
+        for (mdl_id, mdl) in self.schema.items():
+            cls = models.get_model(mdl_id)
+            self.assertNotEqual(cls, None)
+
+    def test_fields(self):
+        types = {'char': 'CharField',
+                 'int': 'IntegerField',
+                 'date': 'DateField'}
+        #
+        for (mdl_id, mdl) in self.schema.items():
+            cls = models.get_model(mdl_id)
+            names = cls._meta.get_all_field_names()
+            #
+            for fld in mdl['fields']:
+                fld_id = fld['id']
+                self.assertIn(fld_id, names)
+                #
+                fld_type = fld['type']
+                fld_cls = cls._meta.get_field(fld_id)
+                self.assertEqual(fld_cls.__class__.__name__, types[fld_type])
 
 
 class RequestTest(TestCase):
