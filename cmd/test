@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Tests installed app(s)
+if (($# > 0)); then
+  python3 manage.py test $1
+else
+  python3 manage.py test
+fi
