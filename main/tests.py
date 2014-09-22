@@ -1,8 +1,11 @@
 import os
 import yaml
 import json
+import random
 
+from datetime import date
 from unittest import TestCase
+
 from django.test import Client
 
 from main import models
@@ -56,29 +59,24 @@ class RequestTest(TestCase):
         self.assertEqual(content['id'], 'users')
 
     def test_create(self):
-        response = self.client.post('/create/users/',
-                                    {'name': 'UnitTest',
-                                     'paycheck': 10,
-                                     'date_joined': '2014-01-01'})
+        dt = self._rand_date()
+        #
+        response = self.client.post('/create/users/', {'name': 'UnitTest',
+                                                       'paycheck': 10,
+                                                       'date_joined': dt})
         #
         self.assertEqual(response.status_code, 200)
         #
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(content['msg'], 'Model created')
-        self.assertListEqual(content['values'][1:],
-                             ['UnitTest', 10, '2014-01-01'])
+        self.assertListEqual(content['values'][1:], ['UnitTest', 10, dt])
 
     def test_update(self):
-        def _first_row():
-            response = self.client.get('/data/users/')
-            #
-            content = json.loads(response.content.decode("utf-8"))
-            return content['values'][0]
-
-        pk = _first_row()[0]
+        pk = self._first_row()[0]
+        dt = self._rand_date()
         #
         response = self.client.post('/update/users/{}/'.format(pk),
-                                    {'date_joined': '2014-01-02'})
+                                    {'date_joined': dt})
         #
         self.assertEqual(response.status_code, 200)
         #
@@ -86,5 +84,25 @@ class RequestTest(TestCase):
         self.assertEqual(content['msg'], 'Model updated')
         self.assertEqual(content['pk'], pk)
         #
-        date = _first_row()[3]
-        self.assertEqual(date, '2014-01-02')
+        date = self._first_row()[3]
+        self.assertEqual(date, dt)
+
+    def _first_row(self):
+        '''
+        Returns data of a first row as list:
+        [<pk>, <value of field 0>, <value of field 1>, ...]
+        '''
+        response = self.client.get('/data/users/')
+        #
+        content = json.loads(response.content.decode("utf-8"))
+        return content['values'][0]
+
+    def _rand_date(self):
+        '''
+        Returns random date as string: "YYYY-MM-DD"
+        '''
+        year = random.choice(range(1, 9999))
+        month = random.choice(range(1, 12))
+        day = random.choice(range(1, 28))
+        #
+        return date(year, month, day).isoformat()
