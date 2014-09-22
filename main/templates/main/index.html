@@ -2,12 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Home</title>
+    <title>Test task</title>
     <link href="http://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css" rel="stylesheet" />
     <link href="/static/styles/index.css" rel="stylesheet" />
   </head>
   <body>
-
     <nav>
       <ul id="models">
 {% for model in models %}
@@ -15,43 +14,15 @@
 {% endfor %}
       </ul>
     </nav>
-
     <section id="content">
       <form>
         <table>
-          <thead>
-            <tr id="fields">
-              <!--th>#</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Username</th-->
-            </tr>
-          </thead>
-          <tbody id="values">
-            <!--tr>
-              <td>1</td>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>Jacob</td>
-              <td>Thornton</td>
-              <td>@fat</td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td colspan="2">Larry the Bird</td>
-              <td>@twitter</td>
-            </tr-->
-          </tbody>
-          <tbody id="blanks">
-          </tbody>
+          <thead><tr id="fields"></tr></thead>
+          <tbody id="values"></tbody>
+          <tbody id="blanks"></tbody>
         </table>
       </form>
     </section>
-
     <script src="http://code.jquery.com/jquery-latest.min.js"></script>
     <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
     <script src="/static/scripts/index.js"></script>
