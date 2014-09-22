@@ -1,3 +1,4 @@
+import os
 import sys
 import inspect
 import yaml
@@ -25,7 +26,8 @@ def setup_models(field_types):
 
     mod = sys.modules[__name__]  # current module
     #
-    with open('main/models.yaml', mode='r', encoding='utf-8') as schema_file:
+    with open(os.path.join(os.path.dirname(__file__), 'models.yaml'), mode='r',
+              encoding='utf-8') as schema_file:
         # Loads data schema
         schema = yaml.load(schema_file)
     # Creates models from data schema
