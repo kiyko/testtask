@@ -55,7 +55,7 @@ class RequestTest(TestCase):
         #
         self.assertEqual(response.status_code, 200)
         #
-        content = json.loads(response.content.decode("utf-8"))
+        content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(content['id'], 'users')
 
     def test_create(self):
@@ -67,7 +67,7 @@ class RequestTest(TestCase):
         #
         self.assertEqual(response.status_code, 200)
         #
-        content = json.loads(response.content.decode("utf-8"))
+        content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(content['msg'], 'Model created')
         self.assertListEqual(content['values'][1:], ['UnitTest', 10, dt])
 
@@ -80,7 +80,7 @@ class RequestTest(TestCase):
         #
         self.assertEqual(response.status_code, 200)
         #
-        content = json.loads(response.content.decode("utf-8"))
+        content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(content['msg'], 'Model updated')
         self.assertEqual(content['pk'], pk)
         #
@@ -94,7 +94,7 @@ class RequestTest(TestCase):
         '''
         response = self.client.get('/data/users/')
         #
-        content = json.loads(response.content.decode("utf-8"))
+        content = json.loads(response.content.decode('utf-8'))
         return content['values'][0]
 
     def _rand_date(self):
