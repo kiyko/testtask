@@ -36,7 +36,7 @@ function on_load() {
 
 function on_edit() {
   var td = $(this);
-  var val = td.html();
+  var val = safe(td.html());
   //
   var fld = field_by_cell(td);
   var id = fld.data('id');
@@ -55,12 +55,12 @@ function on_edit() {
 
 function on_edited() {
   var td = $(this).parent();
-  var val = $(this).val();
+  var org = safe($(this).data('orig')); // original value
+  var val = safe($(this).val()); // updated value
   // Completes editing
   td.html(val);
   td.toggleClass('edt');
   // Updating data
-  var org = $(this).data('orig'); // original value
   if (val != org) { // => value changed
     var fld = field_by_cell(td);
     var type = fld.data('type');
@@ -72,11 +72,13 @@ function on_edited() {
       var mdl_id = $('#models li.active').attr('id');
       var pk = td.parent('tr').data('pk');
       send_data('update', mdl_id + '/' + pk, vals, function on_sent(data) {
-        //console.log(data);
+        notif({type: 'success',
+               msg: 'Data updated successfully'});
       });
     }
     else {
-      alert('Value "' + val + '" must be of type ' + type);
+      notif({type: 'error',
+             msg: 'Value "' + val + '" must be of type ' + type});
       td.html(org);
     }
   }
@@ -94,8 +96,15 @@ function load_data(prms, on_loaded) {
   });
 
   function _on_fail(data) { 
-    alert('Data loading failed');
+    notif({type: 'error',
+           msg: 'Data loading failed'});
   }
+}
+
+function safe(val) {
+  // Makes safe string
+  return val.toString().replace(/</g, '&#60;').replace(/>/g, '&#62;')
+                       .replace(/\'/g, '&#39;').replace(/\"/g, '&#34;');
 }
 
 function is_valid(type, val) {
@@ -116,12 +125,32 @@ function send_data(act, prms, data, on_sent) {
     data: data,
     dataType: 'json',
     cache: false,
-    success: on_sent,
+    success: _on_sent,
     failure: _on_fail
   });
 
-  function _on_fail(data) { 
-    alert('Data updating failed');
+  function _on_sent(res) {
+    on_sent(res);
+    warn_js_inj(data);
+  }
+
+  function _on_fail(res) { 
+    notif({type: 'error',
+           msg: 'Data updating failed'});
+  }
+}
+
+function warn_js_inj(data) {
+  for (id in data) {
+    if (data[id].match(/&#60;script/g) !== null) {
+      notif({type: 'warning',
+             msg: '<img alt="You shall not pass!"' +
+                  ' src="/static/images/you_shall_not_pass.png" />',
+             bgcolor: '#ffffff',
+             multiline: true,
+             width: 350});
+      break;
+    }
   }
 }
 
@@ -205,10 +234,11 @@ function on_create() {
   ctrls.each(function (i) {
     fld = field_by_index(i + 1);
     type = fld.data('type');
-    val = $(this).val();
+    val = safe($(this).val());
     //
     if (!is_valid(fld.data('type'), val)) {
-      alert('Value "' + val + '" must be of type ' + type);
+      notif({type: 'error',
+             msg: 'Value "' + val + '" must be of type ' + type});
       $(this).select();
       vals = {};
       return false; // break each
@@ -224,6 +254,9 @@ function on_create() {
       if ('values' in data) {
         add_values_row(data.values);
       }
+      //
+      notif({type: 'success',
+             msg: 'Data added successfully'});
     });
   }
 }

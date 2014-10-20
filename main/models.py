@@ -68,13 +68,21 @@ def get_model(mdl_id):
     return getattr(mod, mdl_id)
 
 
-def _char_field(**kwargs):
+class _CharField(models.CharField):
     '''
-    Wraps CharField class
+    CharField wrapper for HTML-escaped strings with a maximum length of 255
+    characters
     '''
-    return models.CharField(max_length=255, **kwargs)
+
+    def __init__(self, **kwargs):
+        super().__init__(max_length=255, **kwargs)
+
+    def get_prep_value(self, value):
+        value = super().get_prep_value(value)
+        return value.replace('<', '&#60;').replace('>', '&#62;') \
+                    .replace("'", '&#39;').replace('"', '&#34;')
 
 
-setup_models(field_types={'char': _char_field,
+setup_models(field_types={'char': _CharField,
                           'int': models.IntegerField,
                           'date': models.DateField})
